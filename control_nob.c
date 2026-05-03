@@ -2,6 +2,7 @@
 #include <control_nob.h>
 #include <engine.h>
 #include <config.h>
+#include "raylib.h"
 
 Control_nob make_control_nob(Vector2 pos, float radius, Color color) {
   Control_nob res = {
@@ -36,5 +37,6 @@ void control_da_control_nob(Control_nob *nob, int upkey, int downkey) {
     dir.y++;
   }
 
-  nob->acc.y += dir.y * nob->speed;
+  float speed = IsKeyDown(KEY_LEFT_SHIFT) ? nob->speed * 0.5 : nob->speed;
+  nob->acc.y += dir.y * speed;
 }
