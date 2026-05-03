@@ -8,6 +8,7 @@ extern int g_width;
 extern int g_height;
 
 extern float g_control_nob_speed;
+extern float g_gravity;
 
 #endif // !CONFIG_H_
 
