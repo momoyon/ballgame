@@ -12,16 +12,6 @@
 
 #define COMMONLIB_VERSION "v0.1.13"
 
-#if defined(_WIN32) || defined(_MSC_VER)
-// TODO: Name collisions with raylib
-// NOTE: Don't include unwanted files to speed up compilation
-#define WIN32_LEAN_AND_MEAN
-#define NOCOMM
-#include <windows.h>
-#include <shlwapi.h>
-#undef C_ASSERT // Bruh
-#endif
-
 // Remove Prefix
 #ifdef COMMONLIB_REMOVE_PREFIX
 #define ASSERT C_ASSERT
@@ -609,7 +599,7 @@ void c_os_get_timedate(c_Arena* a) {
 }
 
 bool c_os_file_exists(cstr filename) {
-    return PathFileExistsA(filename);
+    return false;
 }
 
 c_String_array c_os_list_files(cstr dir) {
