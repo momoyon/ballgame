@@ -453,6 +453,8 @@ typedef struct {
 
 bool load_texture(Asset_manager *am, const char *filepath, Texture2D *tex_out);
 bool load_texture_(Asset_manager *am, const char *filepath, Texture2D *tex_out, bool verbose);
+bool load_texture_from_data(Asset_manager *am, const char *name, unsigned char *data, int data_size, Texture2D *tex_out);
+bool load_texture_from_data_(Asset_manager *am, const char *name, unsigned char *data, int data_size, Texture2D *tex_out, bool verbose);
 bool load_sound(Asset_manager *am, const char *filepath, Sound *s_out);
 bool load_sound_(Asset_manager *am, const char *filepath, Sound *s_out, bool verbose);
 void clean_asset_manager(Asset_manager *am);
@@ -2347,6 +2349,38 @@ bool load_texture_(Asset_manager *am, const char *filepath, Texture2D *tex_out, 
 	}
 
 	return true;
+}
+
+bool load_texture_from_data(Asset_manager *am, const char *name, unsigned char *data, int data_size, Texture2D *tex_out) {
+		return load_texture_from_data_(am, name, data, data_size, tex_out, false);
+}
+
+bool load_texture_from_data_(Asset_manager *am, const char *name, unsigned char *data, int data_size, Texture2D *tex_out, bool verbose) {
+ 	Texture_KV *tex_KV = shgetp_null(am->texture_map, (char *)name);
+
+	if (tex_KV != NULL) {
+    if (tex_out) {
+      *tex_out = tex_KV->value;
+    }
+    if (verbose) {
+      log_debug("Found '%s' at texture_map index [%zu]", name, shlenu(am->texture_map));
+    }
+	} else {
+    Image img = LoadImageFromMemory(".png", data, data_size);
+		Texture2D tex = LoadTextureFromImage(img);
+    UnloadImage(img);
+		if (!IsTextureValid(tex)) return false;
+    if (tex_out) {
+      *tex_out = tex;
+    }
+		shput(am->texture_map, (char *)name, tex);
+    if (verbose) {
+        log_debug("Added '%s' (from memory) to texture_map index [%zu]", name, shlenu(am->texture_map));
+    }
+	}
+
+	return true;
+ 
 }
 
 bool load_sound(Asset_manager *am, const char *filepath, Sound *s_out) {

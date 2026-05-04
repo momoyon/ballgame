@@ -4,6 +4,8 @@
 #include <control_nob.h>
 #include <asset_packer.h>
 
+#include <packed/title_screen.png.h>
+
 #include <config.h>
 #define ENGINE_IMPLEMENTATION
 #include <engine.h>
@@ -53,7 +55,7 @@ int main(void) {
   reset();
 
   Texture2D title_screen_tex = { 0 };
-  if (!load_texture(&g_asset_manager, "resources/gfx/title_screen.png", &title_screen_tex)) { return 1; }
+  if (!load_texture_from_data(&g_asset_manager, "title_screen.png", TITLE_SCREEN_PNG_DATA, TITLE_SCREEN_PNG_DATA_SIZE, &title_screen_tex)) { return 1; }
 
   while (!WindowShouldClose()) {
     dt = GetFrameTime();
