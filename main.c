@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include <state.h>
 #include <control_nob.h>
+#include <asset_packer.h>
 
 #include <config.h>
 #define ENGINE_IMPLEMENTATION
@@ -55,6 +56,7 @@ int main(void) {
   Texture2D title_screen_tex = { 0 };
   if (!load_texture(&g_asset_manager, "resources/gfx/title_screen.png", &title_screen_tex)) { return 1; }
 
+  pack_assets();
 
   while (!WindowShouldClose()) {
     dt = GetFrameTime();

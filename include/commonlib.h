@@ -113,6 +113,7 @@
 #define sv_lpop_arg c_sv_lpop_arg
 
 #define str_starts_with c_str_starts_with
+#define str_ends_with c_str_ends_with
 
 #define SET_FLAG C_SET_FLAG
 #define UNSET_FLAG C_UNSET_FLAG
@@ -509,6 +510,7 @@ bool c_sv_lpop_arg(c_String_view *sv, c_String_view *out);
 //
 
 bool c_str_starts_with(const char *str, const char *suffix);
+bool c_str_ends_with(const char* str, const char* preffix);
 
 #endif /* _COMMONLIB_H_ */
 
@@ -1206,6 +1208,14 @@ bool c_str_starts_with(const char *str, const char *suffix) {
         }
     }
     return true;
+}
+
+bool c_str_ends_with(const char* str, const char* prefix) {
+    if (str == NULL) return false;
+    size_t str_len = strlen(str);
+    size_t prefix_len = strlen(prefix);
+    if (prefix_len > str_len) return false;
+    return strcmp(str + str_len - prefix_len, prefix) == 0; 
 }
 
 #endif
