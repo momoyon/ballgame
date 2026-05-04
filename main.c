@@ -24,6 +24,15 @@ Ball ball;
 
 State current_state = STATE_MENU;
 
+
+// state machine
+const char* menuitems[] = {
+    "Start Game",
+    "Options",
+    "Exit",
+};
+int selected_menu_item = 0;
+
 void play_update(float dt);
 
 static void reset(void) {
@@ -43,6 +52,9 @@ int main(void) {
 
   reset();
 
+  Texture2D title_screen_tex = { 0 };
+  if (!load_texture(&g_asset_manager, "resources/gfx/title_screen.png", &title_screen_tex)) { return 1; }
+
 
   while (!WindowShouldClose()) {
     dt = GetFrameTime();
@@ -51,8 +63,26 @@ int main(void) {
     // input
     switch (current_state) {
         case STATE_MENU: {
-            // TODO:
-            current_state = STATE_PLAYING;
+            if (IsKeyPressed(KEY_DOWN)) {
+                selected_menu_item = (selected_menu_item + 1) % (sizeof(menuitems) / sizeof(menuitems[0]));
+			}
+            if (IsKeyPressed(KEY_UP)) {
+                selected_menu_item = (selected_menu_item - 1 + (sizeof(menuitems) / sizeof(menuitems[0]))) % (sizeof(menuitems) / sizeof(menuitems[0]));
+
+            }
+
+            if (IsKeyPressed(KEY_ENTER)) {
+                if (selected_menu_item == 0) {
+                    current_state = STATE_PLAYING;
+                }
+                else if (selected_menu_item == 1) {
+                    ASSERT(false, "Options not implemented yet!");
+                }
+                else if (selected_menu_item == 2) {
+                    close_window();
+                    return 0;
+                }
+            }
         } break;
         case STATE_PLAYING: {
             control_da_control_nob(&left, KEY_S, KEY_C);
@@ -72,8 +102,6 @@ int main(void) {
     // update
     switch (current_state) {
         case STATE_MENU: {
-            // TODO:
-            current_state = STATE_PLAYING;
         } break;
         case STATE_PLAYING: {
             play_update(dt);
@@ -100,8 +128,13 @@ int main(void) {
 
     switch (current_state) {
         case STATE_MENU: {
-            // TODO:
-            current_state = STATE_PLAYING;
+			DrawTextureV(title_screen_tex, v2(0, 0), WHITE);
+            for (int i = 0; i < sizeof(menuitems) / sizeof(menuitems[0]); ++i) {
+                draw_text_aligned(GetFontDefault(), menuitems[i],
+                    v2(g_width * 0.5, g_height * 0.5 + i * 30), 20 + (i == selected_menu_item ? 10 : 0),
+                    TEXT_ALIGN_V_CENTER, TEXT_ALIGN_H_CENTER,
+                    i == selected_menu_item ? YELLOW : WHITE);
+			}
         } break;
         case STATE_PLAYING: {
         } break;
@@ -121,6 +154,8 @@ int main(void) {
 
     end_frame();
   }
+
+  clean_asset_manager(&g_asset_manager);
   close_window();
 
   return 0;
