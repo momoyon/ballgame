@@ -39,6 +39,7 @@
 #define os_get_timedate c_os_get_timedate
 #define os_file_exists c_os_file_exists
 #define os_list_files c_os_list_files
+#define os_rename c_os_rename
 
 #define log_error c_log_error
 #define log_info c_log_info
@@ -364,6 +365,7 @@ typedef struct c_String_array c_String_array;
 void c_os_get_timedate(c_Arena* a);
 bool c_os_file_exists(cstr filename);
 c_String_array c_os_list_files(cstr dir);
+bool c_os_rename(const char *from, const char *to);
 
 //
 // Logging
@@ -610,6 +612,14 @@ c_String_array c_os_list_files(cstr dir) {
     return res;
 }
 
+
+bool c_os_rename(const char *from, const char *to) {
+  (void)from;
+  (void)to;
+  C_ASSERT(false, "UNIMPLEMENTED");
+  return false;
+}
+
 #elif defined(__linux__)
 #include <stdio.h>
 #include <stdlib.h>
@@ -660,6 +670,11 @@ c_String_array c_os_list_files(cstr dir) {
 
     return res;
 }
+
+bool c_os_rename(const char *from, const char *to) {
+  return rename(from, to) == 0;
+}
+
 #endif
 
 // simple and dirty way to have defering in C (not recommended to use!)

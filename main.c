@@ -25,7 +25,6 @@ Ball ball;
 
 State current_state = STATE_MENU;
 
-
 // state machine
 const char* menuitems[] = {
     "Start Game",
@@ -55,8 +54,6 @@ int main(void) {
 
   Texture2D title_screen_tex = { 0 };
   if (!load_texture(&g_asset_manager, "resources/gfx/title_screen.png", &title_screen_tex)) { return 1; }
-
-  pack_assets();
 
   while (!WindowShouldClose()) {
     dt = GetFrameTime();
