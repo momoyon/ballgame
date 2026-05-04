@@ -1,8 +1,9 @@
 #include "ball.h"
 #include "raylib.h"
-#include <state.h>
-#include <control_nob.h>
 #include <asset_packer.h>
+#include <control_nob.h>
+#include <hole.h>
+#include <state.h>
 
 #include <packed/title_screen.png.h>
 
@@ -15,7 +16,7 @@
 #include <commonlib.h>
 
 #define control_radius 16.f
-Color control_color = { 255, 0, 0, 0 };
+Color control_color = {255, 0, 0, 0};
 float pad = control_radius * 2.f;
 
 float dt = 0;
@@ -26,9 +27,11 @@ Control_nob right;
 Ball ball;
 
 State current_state = STATE_MENU;
+Holes holes = {0};
+int holes_count = 10; // Max holes to generate
 
 // state machine
-const char* menuitems[] = {
+const char *menuitems[] = {
     "Start Game",
     "Options",
     "Exit",
@@ -45,6 +48,16 @@ static void reset(void) {
   ball = make_ball(v2(g_width * 0.5, g_height * 0.5), control_radius, YELLOW);
 
   current_state = STATE_MENU;
+
+  // generate holes
+  for (int i = 0; i < holes_count; ++i) {
+    Hole h = {
+      .pos = v2(randomf(pad, g_width-pad), randomf(pad, g_height-pad)),
+      .radius = control_radius*1.25f,
+    };
+
+    darr_append(holes, h);
+  }
 }
 
 int main(void) {
@@ -54,8 +67,12 @@ int main(void) {
 
   reset();
 
-  Texture2D title_screen_tex = { 0 };
-  if (!load_texture_from_data(&g_asset_manager, "title_screen.png", TITLE_SCREEN_PNG_DATA, TITLE_SCREEN_PNG_DATA_SIZE, &title_screen_tex)) { return 1; }
+  Texture2D title_screen_tex = {0};
+  if (!load_texture_from_data(&g_asset_manager, "title_screen.png",
+                              TITLE_SCREEN_PNG_DATA, TITLE_SCREEN_PNG_DATA_SIZE,
+                              &title_screen_tex)) {
+    return 1;
+  }
 
   while (!WindowShouldClose()) {
     dt = GetFrameTime();
@@ -63,95 +80,104 @@ int main(void) {
 
     // input
     switch (current_state) {
-        case STATE_MENU: {
-            if (IsKeyPressed(KEY_DOWN)) {
-                selected_menu_item = (selected_menu_item + 1) % (sizeof(menuitems) / sizeof(menuitems[0]));
-			}
-            if (IsKeyPressed(KEY_UP)) {
-                selected_menu_item = (selected_menu_item - 1 + (sizeof(menuitems) / sizeof(menuitems[0]))) % (sizeof(menuitems) / sizeof(menuitems[0]));
+    case STATE_MENU: {
+      if (IsKeyPressed(KEY_DOWN)) {
+        selected_menu_item = (selected_menu_item + 1) %
+                             (sizeof(menuitems) / sizeof(menuitems[0]));
+      }
+      if (IsKeyPressed(KEY_UP)) {
+        selected_menu_item = (selected_menu_item - 1 +
+                              (sizeof(menuitems) / sizeof(menuitems[0]))) %
+                             (sizeof(menuitems) / sizeof(menuitems[0]));
+      }
 
-            }
-
-            if (IsKeyPressed(KEY_ENTER)) {
-                if (selected_menu_item == 0) {
-                    current_state = STATE_PLAYING;
-                }
-                else if (selected_menu_item == 1) {
-                    ASSERT(false, "Options not implemented yet!");
-                }
-                else if (selected_menu_item == 2) {
-                    close_window();
-                    return 0;
-                }
-            }
-        } break;
-        case STATE_PLAYING: {
-            control_da_control_nob(&left, KEY_S, KEY_C);
-            control_da_control_nob(&right, KEY_K, KEY_N);
-        } break;
-        case STATE_GAMEOVER: {
-            if (IsKeyPressed(KEY_SPACE)) {
-                reset();
-                current_state = STATE_PLAYING;
-            }
-        } break;
-        default: {
-            ASSERT(false, "UNREACHABLE!");
+      if (IsKeyPressed(KEY_ENTER)) {
+        if (selected_menu_item == 0) {
+          current_state = STATE_PLAYING;
+        } else if (selected_menu_item == 1) {
+          ASSERT(false, "Options not implemented yet!");
+        } else if (selected_menu_item == 2) {
+          close_window();
+          return 0;
         }
+      }
+    } break;
+    case STATE_PLAYING: {
+      control_da_control_nob(&left, KEY_S, KEY_C);
+      control_da_control_nob(&right, KEY_K, KEY_N);
+    } break;
+    case STATE_GAMEOVER: {
+      if (IsKeyPressed(KEY_SPACE)) {
+        reset();
+        current_state = STATE_PLAYING;
+      }
+    } break;
+    default: {
+      ASSERT(false, "UNREACHABLE!");
+    }
     }
 
     // update
     switch (current_state) {
-        case STATE_MENU: {
-        } break;
-        case STATE_PLAYING: {
-            play_update(dt);
-        } break;
-        case STATE_GAMEOVER: {
-        
-        } break;
-        default: {
-            ASSERT(false, "UNREACHABLE!");
-        }
+    case STATE_MENU: {
+    } break;
+    case STATE_PLAYING: {
+      play_update(dt);
+    } break;
+    case STATE_GAMEOVER: {
+
+    } break;
+    default: {
+      ASSERT(false, "UNREACHABLE!");
+    }
     }
 
     // draw
-    ClearBackground(BLACK);
+    ClearBackground(BACKGROUND_COLOR);
 
     if (current_state != STATE_MENU) {
-        draw_control_nob(&left);
-        draw_control_nob(&right);
-        // draw line
-        DrawLineV(v2(left.pos.x, left.pos.y - left.radius),
-            v2(right.pos.x, right.pos.y - right.radius), WHITE);
-        draw_ball(&ball);
+      draw_control_nob(&left);
+      draw_control_nob(&right);
+      // draw line
+      DrawLineV(v2(left.pos.x, left.pos.y - left.radius),
+                v2(right.pos.x, right.pos.y - right.radius), WHITE);
+      draw_ball(&ball);
+
+      // draw holes
+      for (int i = 0; i < holes.count; ++i) {
+        Hole *h = &holes.items[i];
+
+        draw_hole(h);
+      }
     }
 
     switch (current_state) {
-        case STATE_MENU: {
-			DrawTextureV(title_screen_tex, v2(0, 0), WHITE);
-            for (int i = 0; i < sizeof(menuitems) / sizeof(menuitems[0]); ++i) {
-                draw_text_aligned(GetFontDefault(), menuitems[i],
-                    v2(g_width * 0.5, g_height * 0.5 + i * 30), 20 + (i == selected_menu_item ? 10 : 0),
-                    TEXT_ALIGN_V_CENTER, TEXT_ALIGN_H_CENTER,
-                    i == selected_menu_item ? YELLOW : WHITE);
-			}
-        } break;
-        case STATE_PLAYING: {
-        } break;
-        case STATE_GAMEOVER: {
-            draw_text_aligned(GetFontDefault(), "Game Over!",
-                v2(g_width * 0.5, g_height * 0.5), 20, TEXT_ALIGN_V_CENTER, TEXT_ALIGN_H_CENTER, WHITE);
-        } break;
-        default: {
-            ASSERT(false, "UNREACHABLE!");
-        }
+    case STATE_MENU: {
+      DrawTextureV(title_screen_tex, v2(0, 0), WHITE);
+      for (int i = 0; i < sizeof(menuitems) / sizeof(menuitems[0]); ++i) {
+        draw_text_aligned(GetFontDefault(), menuitems[i],
+                          v2(g_width * 0.5, g_height * 0.5 + i * 30),
+                          20 + (i == selected_menu_item ? 10 : 0),
+                          TEXT_ALIGN_V_CENTER, TEXT_ALIGN_H_CENTER,
+                          i == selected_menu_item ? YELLOW : WHITE);
+      }
+    } break;
+    case STATE_PLAYING: {
+    } break;
+    case STATE_GAMEOVER: {
+      draw_text_aligned(GetFontDefault(), "Game Over!",
+                        v2(g_width * 0.5, g_height * 0.5), 20,
+                        TEXT_ALIGN_V_CENTER, TEXT_ALIGN_H_CENTER, WHITE);
+    } break;
+    default: {
+      ASSERT(false, "UNREACHABLE!");
+    }
     }
 
     // debug
-    //Vector2 mid = v2_add(p1, v2_scale(line, 0.5));
-    //DrawCircleV(mid, 8, GOLD);
-    //DrawLineV(mid, v2_add(mid, v2_scale(normal_to_line, 100)), WHITE);
+    // Vector2 mid = v2_add(p1, v2_scale(line, 0.5));
+    // DrawCircleV(mid, 8, GOLD);
+    // DrawLineV(mid, v2_add(mid, v2_scale(normal_to_line, 100)), WHITE);
 
     end_frame();
   }
@@ -162,67 +188,69 @@ int main(void) {
   return 0;
 }
 
-
 void play_update(float dt) {
-    Vector2 line = { 0 };
-    Vector2 normal_to_line = { 0 };
-    Vector2 p1 = v2_sub(left.pos, v2(0, left.radius));
-    Vector2 p2 = v2_sub(right.pos, v2(0, right.radius));
-    // apply gravity to ball
-    ball.acc.y = g_gravity;
-    update_ball(&ball, dt);
-    for (int i = 0; i < substeps; ++i) {
-        float subdt = dt / substeps;
-        update_control_nob(&left, subdt);
-        update_control_nob(&right, subdt);
+  Vector2 line = {0};
+  Vector2 normal_to_line = {0};
+  Vector2 p1 = v2_sub(left.pos, v2(0, left.radius));
+  Vector2 p2 = v2_sub(right.pos, v2(0, right.radius));
+  // apply gravity to ball
+  ball.acc.y = g_gravity;
+  update_ball(&ball, dt);
+  for (int i = 0; i < substeps; ++i) {
+    float subdt = dt / substeps;
+    update_control_nob(&left, subdt);
+    update_control_nob(&right, subdt);
 
-        // collide ball with line
-        if (CheckCollisionCircleLine(ball.pos, ball.radius, p1, p2)) {
-            line = v2_sub(p2, p1);
-            normal_to_line = v2_normalize(v2(line.y, -line.x));
-            ball.acc = v2_add(ball.acc, v2_scale(normal_to_line, 10));
-        }
-
-        float line_y_at_ball = 0.0f;
-        float ball_x = ball.pos.x;
-        if (ball_x <= p1.x) {
-            line_y_at_ball = p1.y; // Left of left nob: use left endpoint y
-        }
-        else if (ball_x >= p2.x) {
-            line_y_at_ball = p2.y; // Right of right nob: use right endpoint y
-        }
-        else {
-            // Linear interpolation between p1 and p2
-            float t = (ball_x - p1.x) / (p2.x - p1.x);
-            line_y_at_ball = p1.y + t * (p2.y - p1.y);
-        }
-
-        float ball_bottom = ball.pos.y + ball.radius;
-        if (ball_bottom > line_y_at_ball) {
-            // Move ball up so its bottom touches the line
-            ball.pos.y = line_y_at_ball - ball.radius;
-            // Stop downward velocity (use *= -0.9 for bounce instead of 0 if
-            // desired)
-            if (ball.vel.y > 0)
-                ball.vel.y = 0;
-        }
-
-        if (ball.pos.x < left.pos.x || ball.pos.x > right.pos.x) {
-            current_state = STATE_GAMEOVER;
-        }
+    // collide ball with line
+    if (CheckCollisionCircleLine(ball.pos, ball.radius, p1, p2)) {
+      line = v2_sub(p2, p1);
+      normal_to_line = v2_normalize(v2(line.y, -line.x));
+      ball.acc = v2_add(ball.acc, v2_scale(normal_to_line, 10));
     }
 
-    // bind nobs to the window
-    if (left.pos.y < pad + left.radius) {
-        left.pos.y = pad + left.radius;
+    float line_y_at_ball = 0.0f;
+    float ball_x = ball.pos.x;
+    if (ball_x <= p1.x) {
+      line_y_at_ball = p1.y; // Left of left nob: use left endpoint y
+    } else if (ball_x >= p2.x) {
+      line_y_at_ball = p2.y; // Right of right nob: use right endpoint y
+    } else {
+      // Linear interpolation between p1 and p2
+      float t = (ball_x - p1.x) / (p2.x - p1.x);
+      line_y_at_ball = p1.y + t * (p2.y - p1.y);
     }
-    if (left.pos.y > g_height - pad - left.radius) {
-        left.pos.y = g_height - pad - left.radius;
+
+    float ball_bottom = ball.pos.y + ball.radius;
+    if (ball_bottom > line_y_at_ball) {
+      // Move ball up so its bottom touches the line
+      ball.pos.y = line_y_at_ball - ball.radius;
+      // Stop downward velocity (use *= -0.9 for bounce instead of 0 if
+      // desired)
+      if (ball.vel.y > 0)
+        ball.vel.y = 0;
     }
-    if (right.pos.y < pad + right.radius) {
-        right.pos.y = pad + right.radius;
+
+    if (ball.pos.x < left.pos.x || ball.pos.x > right.pos.x) {
+      current_state = STATE_GAMEOVER;
     }
-    if (right.pos.y > g_height - pad - right.radius) {
-        right.pos.y = g_height - pad - right.radius;
-    }
+  }
+
+  // bind nobs to the window
+  if (left.pos.y < pad + left.radius) {
+    left.pos.y = pad + left.radius;
+  }
+  if (left.pos.y > g_height - pad - left.radius) {
+    left.pos.y = g_height - pad - left.radius;
+  }
+  if (right.pos.y < pad + right.radius) {
+    right.pos.y = pad + right.radius;
+  }
+  if (right.pos.y > g_height - pad - right.radius) {
+    right.pos.y = g_height - pad - right.radius;
+  }
+
+  // Update holes
+  for (int i = 0; i < holes.count; ++i) {
+    Hole *h = &holes.items[i];
+  }
 }

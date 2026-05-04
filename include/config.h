@@ -14,5 +14,6 @@ extern float g_gravity;
 
 extern Asset_manager g_asset_manager;
 
-#endif // !CONFIG_H_
+#define BACKGROUND_COLOR CLITERAL(Color){0x22, 0x20, 0x34, 0xFF}
 
+#endif // !CONFIG_H_
