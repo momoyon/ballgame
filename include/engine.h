@@ -321,8 +321,8 @@ void UI_Draw_element_stack_push(UI_Draw_element_stack* stack, UI_Draw_element va
 bool UI_Draw_element_stack_pop(UI_Draw_element_stack* stack, UI_Draw_element* popped);
 void UI_Draw_element_stack_free(UI_Draw_element_stack* stack);
 
-Vector2 UI_Layout_available_pos(UI_Layout* this);
-void UI_Layout_push_widget(UI_Layout* this, Vector2 size);
+Vector2 UI_Layout_available_pos(UI_Layout* self);
+void UI_Layout_push_widget(UI_Layout* self, Vector2 size);
 
 struct UI_Theme {
 	Color bg_color;
@@ -363,30 +363,30 @@ struct UI {
 };
 
 UI UI_make(UI_Theme theme, Font* font, Vector2 pos, cstr title, Vector2* mpos_ptr);
-void UI_push_layout(UI* this, UI_Layout layout);
-UI_Layout UI_pop_layout(UI* this);
-UI_Layout* UI_top_layout(UI* this);
-void UI_begin_layout(UI* this, UI_Layout_kind kind);
-void UI_end_layout(UI* this);
-void UI_free(UI* this);
+void UI_push_layout(UI* self, UI_Layout layout);
+UI_Layout UI_pop_layout(UI* self);
+UI_Layout* UI_top_layout(UI* self);
+void UI_begin_layout(UI* self, UI_Layout_kind kind);
+void UI_end_layout(UI* self);
+void UI_free(UI* self);
 
-void UI_begin(UI* this, UI_Layout_kind kind);
-bool UI_button(UI* this, cstr text, int font_size, Color color);
-void UI_text(UI* this, cstr text, int font_size, Color color);
-void UI_line(UI* this, float thick, Color color);
-void UI_spacing(UI* this, float spacing);
-void UI_sprite(UI* this, Sprite* spr);
-bool UI_sprite_button(UI* this, Sprite* spr);
-bool UI_sprite_button_frame(UI* this, Sprite* spr, int hframe, int vframe);
-bool UI_textbox(UI* this, Textbox *tbox);
-bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count, bool *dropdown_expanded, int font_size, Color color);
-void UI_background(UI* this);
+void UI_begin(UI* self, UI_Layout_kind kind);
+bool UI_button(UI* self, cstr text, int font_size, Color color);
+void UI_text(UI* self, cstr text, int font_size, Color color);
+void UI_line(UI* self, float thick, Color color);
+void UI_spacing(UI* self, float spacing);
+void UI_sprite(UI* self, Sprite* spr);
+bool UI_sprite_button(UI* self, Sprite* spr);
+bool UI_sprite_button_frame(UI* self, Sprite* spr, int hframe, int vframe);
+bool UI_textbox(UI* self, Textbox *tbox);
+bool UI_dropdown(UI* self, int *selected, const char **items, size_t items_count, bool *dropdown_expanded, int font_size, Color color);
+void UI_background(UI* self);
 // @NOTE: We are defering drawing because we need to call UI funcs before any input handling for the frame is happened,
 // if we want input ignoring. We just push draw info to a stack when the UI funcs are called and draw all of them at once on UI_draw().
-// @NOTE: @IMPORTANT: IT IS A MUST TO CALL THIS BEFORE UI_end()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-void UI_draw(UI* this);
+// @NOTE: @IMPORTANT: IT IS A MUST TO CALL self BEFORE UI_end()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+void UI_draw(UI* self);
 // @NOTE: Must be in called input handling for the frame. ***
-void UI_end(UI* this);
+void UI_end(UI* self);
 
 // NOTE: Rectangle
 bool rect_contains_point(Rectangle r1, Vector2 p);
@@ -492,13 +492,11 @@ struct Console_lines {
 }; // @darr
 
 
-typedef enum Console_flag Console_flag;
-
-enum Console_flag {
+typedef enum Console_flag {
 		CONSOLE_FLAG_NONE,
 		CONSOLE_FLAG_READLINE_USES_UNPREFIXED_LINES,
 		CONSOLE_FLAG_COUNT,
-};
+} Console_flag;
 
 struct Console {
 	Console_lines history;
@@ -552,7 +550,7 @@ Ids match_command(const char *command, const char **commands, size_t commands_co
 				Console_line l = {\
 						.color = WHITE,\
 				};\
-				snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[INFO] "fmt, __VA_ARGS__);\
+				snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[INFO] " fmt, __VA_ARGS__);\
 				darr_append(console.lines, l);\
 		} while (0)
 
@@ -560,7 +558,7 @@ Ids match_command(const char *command, const char **commands, size_t commands_co
 				Console_line l = {\
 						.color = YELLOW,\
 				};\
-				snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[WARNING] "fmt, __VA_ARGS__);\
+				snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[WARNING] " fmt, __VA_ARGS__);\
 				darr_append(console.lines, l);\
 		} while (0)
 
@@ -568,7 +566,7 @@ Ids match_command(const char *command, const char **commands, size_t commands_co
 				Console_line l = {\
 						.color = RED,\
 				};\
-				snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[ERROR] "fmt, ##__VA_ARGS__);\
+				snprintf(l.buff, CONSOLE_LINE_BUFF_CAP, "[ERROR] " fmt, ##__VA_ARGS__);\
 				darr_append(console.lines, l);\
 		} while (0)
 
@@ -853,25 +851,25 @@ void draw_nine_slice_box(Nine_slice_box *nbox, Vector2 pos, Vector2i size) {
 
 extern bool should_ignore_mouse_input;
 
-static Vector2 get_ui_bg_rect_pos(UI* this) {
+static Vector2 get_ui_bg_rect_pos(UI* self) {
     return (Vector2) {
-        .x = this->pos.x - this->theme.bg_padding.x,
-        .y = this->pos.y + (this->theme.titlebar_height * (1.f+this->theme.titlebar_pad_bottom)) - this->theme.bg_padding.y,
+        .x = self->pos.x - self->theme.bg_padding.x,
+        .y = self->pos.y + (self->theme.titlebar_height * (1.f+self->theme.titlebar_pad_bottom)) - self->theme.bg_padding.y,
     };
 }
 
-Vector2 UI_Layout_available_pos(UI_Layout* this) {
-	switch (this->kind) {
+Vector2 UI_Layout_available_pos(UI_Layout* self) {
+	switch (self->kind) {
 	case UI_LAYOUT_KIND_HORZ: {
 		return (Vector2) {
-			.x = this->pos.x + this->size.x + this->padding.x,
-			.y = this->pos.y,
+			.x = self->pos.x + self->size.x + self->padding.x,
+			.y = self->pos.y,
 		};
 	} break;
 	case UI_LAYOUT_KIND_VERT: {
 		return (Vector2) {
-			.x = this->pos.x,
-			.y = this->pos.y + this->size.y + this->padding.y,
+			.x = self->pos.x,
+			.y = self->pos.y + self->size.y + self->padding.y,
 		};
 	} break;
 	case UI_LAYOUT_KIND_COUNT:
@@ -882,30 +880,30 @@ Vector2 UI_Layout_available_pos(UI_Layout* this) {
 	return (Vector2) {0.f, 0.f};
 }
 
-void UI_Layout_push_widget(UI_Layout* this, Vector2 size) {
-	switch (this->kind) {
+void UI_Layout_push_widget(UI_Layout* self, Vector2 size) {
+	switch (self->kind) {
 	case UI_LAYOUT_KIND_HORZ: {
-		this->size.x += size.x + this->padding.x;
-		this->size.y = fmaxf(this->size.y, size.y);
+		self->size.x += size.x + self->padding.x;
+		self->size.y = fmaxf(self->size.y, size.y);
 	} break;
 	case UI_LAYOUT_KIND_VERT: {
-		this->size.x = fmaxf(this->size.x, size.x);
-		this->size.y += size.y + this->padding.y;
+		self->size.x = fmaxf(self->size.x, size.x);
+		self->size.y += size.y + self->padding.y;
 	} break;
 	case UI_LAYOUT_KIND_COUNT:
 	default: ASSERT(0, "Unreachable");
 	}
 }
 
-static void push_ui_widget(UI* this, UI_Layout* layout, Vector2 size) {
+static void push_ui_widget(UI* self, UI_Layout* layout, Vector2 size) {
 	switch (layout->kind) {
 	case UI_LAYOUT_KIND_HORZ: {
-		this->ui_rect.width += size.x;
-		this->ui_rect.height = fmaxf(this->ui_rect.height, size.y);
+		self->ui_rect.width += size.x;
+		self->ui_rect.height = fmaxf(self->ui_rect.height, size.y);
 	} break;
 	case UI_LAYOUT_KIND_VERT: {
-		this->ui_rect.width = fmaxf(this->ui_rect.width, size.x);
-		this->ui_rect.height += size.y;
+		self->ui_rect.width = fmaxf(self->ui_rect.width, size.x);
+		self->ui_rect.height += size.y;
 	} break;
 	case UI_LAYOUT_KIND_COUNT:
 	default: ASSERT(0, "Unreachable");
@@ -948,26 +946,26 @@ UI UI_make(UI_Theme theme, Font* font, Vector2 pos, cstr title, Vector2* mpos_pt
 	return res;
 }
 
-void UI_push_layout(UI* this, UI_Layout layout) {
-	ASSERT(this->layouts_count < LAYOUTS_CAP, "Layouts exceeded");
-	this->layouts[this->layouts_count++] = layout;
+void UI_push_layout(UI* self, UI_Layout layout) {
+	ASSERT(self->layouts_count < LAYOUTS_CAP, "Layouts exceeded");
+	self->layouts[self->layouts_count++] = layout;
 }
 
-UI_Layout UI_pop_layout(UI* this) {
-	ASSERT(this->layouts_count > 0, "Layouts exceeded");
-	return this->layouts[--this->layouts_count];
+UI_Layout UI_pop_layout(UI* self) {
+	ASSERT(self->layouts_count > 0, "Layouts exceeded");
+	return self->layouts[--self->layouts_count];
 }
 
-UI_Layout* UI_top_layout(UI* this) {
-	if (this->layouts_count > 0)
-		return &this->layouts[this->layouts_count - 1];
+UI_Layout* UI_top_layout(UI* self) {
+	if (self->layouts_count > 0)
+		return &self->layouts[self->layouts_count - 1];
 	return NULL;
 }
 
-void UI_begin_layout(UI* this, UI_Layout_kind kind) {
-	UI_Layout* prev = UI_top_layout(this);
+void UI_begin_layout(UI* self, UI_Layout_kind kind) {
+	UI_Layout* prev = UI_top_layout(self);
 	if (prev == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return;
 	}
 
@@ -975,17 +973,17 @@ void UI_begin_layout(UI* this, UI_Layout_kind kind) {
 	next.kind = kind;
 	next.pos = UI_Layout_available_pos(prev);
 	next.size = (Vector2) {0.f, 0.f};
-	UI_push_layout(this, next);
+	UI_push_layout(self, next);
 }
 
-void UI_end_layout(UI* this) {
-	UI_Layout child = UI_pop_layout(this);
-	UI_Layout* parent = UI_top_layout(this);
+void UI_end_layout(UI* self) {
+	UI_Layout child = UI_pop_layout(self);
+	UI_Layout* parent = UI_top_layout(self);
 	if (parent == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return;
 	}
-    push_ui_widget(this, parent, child.size);
+    push_ui_widget(self, parent, child.size);
 	/* UI_Layout_push_widget(parent, child.size); */
 }
 
@@ -1030,27 +1028,27 @@ void UI_Draw_element_stack_free(UI_Draw_element_stack* stack) {
 	arena_free(&stack->arena);
 }
 
-void UI_begin(UI* this, UI_Layout_kind kind) {
+void UI_begin(UI* self, UI_Layout_kind kind) {
 	UI_Layout layout = {0};
-	layout.pos = Vector2Add(this->pos, (Vector2) {0.f, this->theme.titlebar_height*(1+this->theme.titlebar_pad_bottom)});
-    layout.pos = Vector2Add(layout.pos, this->scroll_offset);
+	layout.pos = Vector2Add(self->pos, (Vector2) {0.f, self->theme.titlebar_height*(1+self->theme.titlebar_pad_bottom)});
+    layout.pos = Vector2Add(layout.pos, self->scroll_offset);
 	layout.kind = kind;
-	UI_push_layout(this, layout);
+	UI_push_layout(self, layout);
 
-    this->ui_rect.width = 0.f;
-    this->ui_rect.height = 0.f;
+    self->ui_rect.width = 0.f;
+    self->ui_rect.height = 0.f;
 }
 
-bool UI_button(UI* this, cstr text, int font_size, Color color) {
-	int id = this->last_used_id++;
-	UI_Layout* top = UI_top_layout(this);
+bool UI_button(UI* self, cstr text, int font_size, Color color) {
+	int id = self->last_used_id++;
+	UI_Layout* top = UI_top_layout(self);
 	if (top == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return false;
 	}
 
 	const Vector2 pos = UI_Layout_available_pos(top);
-	const Vector2 size = Vector2Add(MeasureTextEx(*this->font, text, font_size, 1.f), Vector2Scale(this->btn_padding, 2.f));
+	const Vector2 size = Vector2Add(MeasureTextEx(*self->font, text, font_size, 1.f), Vector2Scale(self->btn_padding, 2.f));
 	const Rectangle rect = {
 			.x = pos.x,
 			.y = pos.y,
@@ -1058,18 +1056,18 @@ bool UI_button(UI* this, cstr text, int font_size, Color color) {
 			.height = size.y,
 	};
 	bool click = false;
-	Vector2 mpos = *this->mpos_ptr;
+	Vector2 mpos = *self->mpos_ptr;
 	bool hovering = CheckCollisionPointRec(mpos, rect);
-	if (this->active_id == id) {
+	if (self->active_id == id) {
 		if (mouse_button_released_unignored(MOUSE_BUTTON_LEFT)) {
-			this->active_id = -1;
+			self->active_id = -1;
 			if (hovering) {
                 click = true;
 			}
 		}
 	} else {
 		if (hovering && mouse_button_pressed_unignored(MOUSE_BUTTON_LEFT)) {
-			this->active_id = id;
+			self->active_id = id;
 		}
 	}
 
@@ -1083,7 +1081,7 @@ bool UI_button(UI* this, cstr text, int font_size, Color color) {
 		alpha = 1.f;
 	}
 
-	UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+	UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_BOX,
 			.pos =	(Vector2) { rect.x, rect.y },
 			.size = (Vector2) { rect.width, rect.height },
@@ -1091,78 +1089,78 @@ bool UI_button(UI* this, cstr text, int font_size, Color color) {
 			.out_color = WHITE,
 		});
 
-	Vector2 draw_pos = Vector2Add(pos, this->btn_padding);
+	Vector2 draw_pos = Vector2Add(pos, self->btn_padding);
 	if (is_clicked) {
 		draw_pos = Vector2AddValue(draw_pos, 1);
 	}
 
-	UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+	UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_TEXT,
 			.pos = draw_pos,
 			.fill_color = WHITE,
 			.out_color = WHITE,
 			.spr = NULL,
-			.font = this->font,
+			.font = self->font,
 			.text = text,
 			.font_size = font_size,
 		});
 
-	UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+	UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_RECT,
 			.pos =	(Vector2) { rect.x, rect.y },
 			.size = (Vector2) { rect.width, rect.height },
 			.fill_color = ColorAlpha(color, alpha),
 		});
-    push_ui_widget(this, top, size);
+    push_ui_widget(self, top, size);
 	/* UI_Layout_push_widget(top, size); */
 
-    if (!this->show) click = false;
+    if (!self->show) click = false;
     if (click) ignore_mouse_input(true);
 
 	return click;
 }
 
-void UI_text(UI* this, cstr text, int font_size, Color color) {
-	int id = this->last_used_id++;
+void UI_text(UI* self, cstr text, int font_size, Color color) {
+	int id = self->last_used_id++;
 	(void)id;
-	UI_Layout* top = UI_top_layout(this);
+	UI_Layout* top = UI_top_layout(self);
 	if (top == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return;
 	}
 
 	const Vector2 pos = UI_Layout_available_pos(top);
-	const Vector2 size = Vector2Add(MeasureTextEx(*this->font, text, font_size, 1.f), Vector2Scale(this->btn_padding, 2.f));
-	/* draw_text(ctx, this->font, text, pos, font_size, color); */
-	UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+	const Vector2 size = Vector2Add(MeasureTextEx(*self->font, text, font_size, 1.f), Vector2Scale(self->btn_padding, 2.f));
+	/* draw_text(ctx, self->font, text, pos, font_size, color); */
+	UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_TEXT,
 			.pos = pos,
 			.fill_color = color,
 			.out_color = color,
 			.spr = NULL,
-			.font = this->font,
+			.font = self->font,
 			.text = text,
 			.font_size = font_size,
 		});
 
-    push_ui_widget(this, top, size);
+    push_ui_widget(self, top, size);
     /* UI_Layout_push_widget(top, size); */
 }
 
-void UI_line(UI* this, float thick, Color color) {
-	int id = this->last_used_id++;
+void UI_line(UI* self, float thick, Color color) {
+	int id = self->last_used_id++;
 	(void)id;
-	UI_Layout* top = UI_top_layout(this);
+	UI_Layout* top = UI_top_layout(self);
 	if (top == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return;
 	}
 
 	Vector2 pos = UI_Layout_available_pos(top);
     pos.y += thick;
-	const Vector2 size = v2(this->ui_rect.width, thick * 4);
+	const Vector2 size = v2(self->ui_rect.width, thick * 4);
 
-	UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+	UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_LINE,
 			.pos = pos,
 			.fill_color = color,
@@ -1171,22 +1169,22 @@ void UI_line(UI* this, float thick, Color color) {
             .thick = thick,
 		});
 
-    push_ui_widget(this, top, size);
+    push_ui_widget(self, top, size);
 }
 
-void UI_sprite(UI* this, Sprite* spr) {
-	int id = this->last_used_id++;
+void UI_sprite(UI* self, Sprite* spr) {
+	int id = self->last_used_id++;
 	(void)id;
-	UI_Layout* top = UI_top_layout(this);
+	UI_Layout* top = UI_top_layout(self);
 	if (top == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return;
 	}
 
 	const Vector2 pos = UI_Layout_available_pos(top);
 	const Vector2 size = (Vector2) { spr->tex_rect.width*spr->scale.x, spr->tex_rect.height*spr->scale.y };
 	/* draw_sprite_at(ctx, spr, pos); */
-	UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+	UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_SPRITE,
 			.pos = pos,
 			.fill_color = WHITE,
@@ -1197,15 +1195,15 @@ void UI_sprite(UI* this, Sprite* spr) {
 			.font_size = 0,
 		});
 
-    push_ui_widget(this, top, size);
+    push_ui_widget(self, top, size);
 	/* UI_Layout_push_widget(top, size); */
 }
 
-bool UI_sprite_button(UI* this, Sprite* spr) {
-	int id = this->last_used_id++;
-	UI_Layout* top = UI_top_layout(this);
+bool UI_sprite_button(UI* self, Sprite* spr) {
+	int id = self->last_used_id++;
+	UI_Layout* top = UI_top_layout(self);
 	if (top == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return false;
 	}
 
@@ -1218,18 +1216,18 @@ bool UI_sprite_button(UI* this, Sprite* spr) {
 			.height = size.y,
 	};
 	bool click = false;
-	Vector2 mpos = *this->mpos_ptr;
+	Vector2 mpos = *self->mpos_ptr;
 	bool hovering = CheckCollisionPointRec(mpos, rect);
-	if (this->active_id == id) {
+	if (self->active_id == id) {
 		if (mouse_button_released_unignored(MOUSE_BUTTON_LEFT)) {
-			this->active_id = -1;
+			self->active_id = -1;
 			if (hovering) {
 	click = true;
 			}
 		}
 	} else {
 		if (hovering && mouse_button_pressed_unignored(MOUSE_BUTTON_LEFT)) {
-			this->active_id = id;
+			self->active_id = id;
 		}
 	}
 
@@ -1245,7 +1243,7 @@ bool UI_sprite_button(UI* this, Sprite* spr) {
 
 	Color color = spr->tint;
 	color.a = alpha;
-	UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+	UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_SPRITE,
 			.pos = pos,
 			.fill_color = color,
@@ -1257,22 +1255,22 @@ bool UI_sprite_button(UI* this, Sprite* spr) {
 		});
 
 
-    push_ui_widget(this, top, size);
+    push_ui_widget(self, top, size);
 	/* UI_Layout_push_widget(top, size); */
 
 	// @Cleanup: why are we ignoring mouse input unconditionally here????
 	/* ignore_mouse_input(true); */
 
-    if (!this->show) click = false;
+    if (!self->show) click = false;
     if (click) ignore_mouse_input(true);
 	return click;
 }
 
-bool UI_sprite_button_frame(UI* this, Sprite* spr, int hframe, int vframe) {
-	int id = this->last_used_id++;
-	UI_Layout* top = UI_top_layout(this);
+bool UI_sprite_button_frame(UI* self, Sprite* spr, int hframe, int vframe) {
+	int id = self->last_used_id++;
+	UI_Layout* top = UI_top_layout(self);
 	if (top == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return false;
 	}
 
@@ -1285,18 +1283,18 @@ bool UI_sprite_button_frame(UI* this, Sprite* spr, int hframe, int vframe) {
 			.height = size.y,
 	};
 	bool click = false;
-	Vector2 mpos = *this->mpos_ptr;
+	Vector2 mpos = *self->mpos_ptr;
 	bool hovering = CheckCollisionPointRec(mpos, rect);
-	if (this->active_id == id) {
+	if (self->active_id == id) {
 		if (mouse_button_released_unignored(MOUSE_BUTTON_LEFT)) {
-			this->active_id = -1;
+			self->active_id = -1;
 			if (hovering) {
 	click = true;
 			}
 		}
 	} else {
 		if (hovering && mouse_button_pressed_unignored(MOUSE_BUTTON_LEFT)) {
-			this->active_id = id;
+			self->active_id = id;
 		}
 	}
 
@@ -1313,7 +1311,7 @@ bool UI_sprite_button_frame(UI* this, Sprite* spr, int hframe, int vframe) {
 	Color color = spr->tint;
 	color.a = alpha;
 	/* draw_sprite_at(ctx, spr, pos); */
-	UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+	UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_SPRITE_FRAME,
 			.pos = pos,
 			.fill_color = color,
@@ -1326,23 +1324,23 @@ bool UI_sprite_button_frame(UI* this, Sprite* spr, int hframe, int vframe) {
 			.font_size = 0,
 		});
 
-    push_ui_widget(this, top, size);
+    push_ui_widget(self, top, size);
 	/* UI_Layout_push_widget(top, size); */
 
 	// @Cleanup: why are we ignoring mouse input unconditionally here????
 	/* ignore_mouse_input(true); */
 
-    if (!this->show) click = false;
+    if (!self->show) click = false;
     if (click) ignore_mouse_input(true);
 	return click;
 }
 
-void UI_spacing(UI* this, float spacing) {
-	int id = this->last_used_id++;
+void UI_spacing(UI* self, float spacing) {
+	int id = self->last_used_id++;
 	(void)id;
-	UI_Layout* top = UI_top_layout(this);
+	UI_Layout* top = UI_top_layout(self);
 	if (top == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return;
 	}
 
@@ -1356,14 +1354,14 @@ void UI_spacing(UI* this, float spacing) {
 		size.y = spacing;
 	}
 
-    push_ui_widget(this, top, size);
+    push_ui_widget(self, top, size);
 	/* UI_Layout_push_widget(top, size); */
 }
 
-bool UI_textbox(UI* this, Textbox *tbox) {
-	UI_Layout* top = UI_top_layout(this);
+bool UI_textbox(UI* self, Textbox *tbox) {
+	UI_Layout* top = UI_top_layout(self);
 	if (top == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return false;
 	}
 
@@ -1372,7 +1370,7 @@ bool UI_textbox(UI* this, Textbox *tbox) {
     tbox->pos = pos;
 
 
-    Vector2 mpos = *this->mpos_ptr;
+    Vector2 mpos = *self->mpos_ptr;
     Rectangle tbox_rect = get_textbox_rect(tbox);
 
     // Activate on click
@@ -1380,12 +1378,12 @@ bool UI_textbox(UI* this, Textbox *tbox) {
         if (mouse_button_pressed_unignored(MOUSE_BUTTON_LEFT)) tbox->active = !tbox->active;
     }
 
-	UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+	UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_TEXTBOX,
             .tbox = tbox,
 		});
 
-    push_ui_widget(this, top, size);
+    push_ui_widget(self, top, size);
 
     update_textbox(tbox);
 
@@ -1396,11 +1394,11 @@ bool UI_textbox(UI* this, Textbox *tbox) {
     return false;
 }
 
-bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count, bool *expanded, int font_size, Color color) {
+bool UI_dropdown(UI* self, int *selected, const char **items, size_t items_count, bool *expanded, int font_size, Color color) {
 	C_ASSERT(selected && expanded, "selected or expanded is NULL!");
-	UI_Layout* top = UI_top_layout(this);
+	UI_Layout* top = UI_top_layout(self);
 	if (top == NULL) {
-		log_error("This function must be used between 'begin' and 'end'!");
+		log_error("self function must be used between 'begin' and 'end'!");
 		return -1;
 	}
 
@@ -1410,7 +1408,7 @@ bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count
 	if (*expanded) {
 		for (int i = 0; i < items_count; ++i) {
 			const char *item = items[i];
-			Vector2 size = Vector2Add(MeasureTextEx(*this->font, item, font_size, 1.f), Vector2Scale(this->btn_padding, 2.f));
+			Vector2 size = Vector2Add(MeasureTextEx(*self->font, item, font_size, 1.f), Vector2Scale(self->btn_padding, 2.f));
 
 			Rectangle rect = {
 				.x = pos.x,
@@ -1419,7 +1417,7 @@ bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count
 				.height = size.y,
 			};
 
-			Vector2 mpos = *this->mpos_ptr;
+			Vector2 mpos = *self->mpos_ptr;
 			bool hovering = CheckCollisionPointRec(mpos, rect);
 
 			if (hovering && mouse_button_pressed_unignored(MOUSE_BUTTON_LEFT)) {
@@ -1436,7 +1434,7 @@ bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count
 				color.a = 255;
 			}
 
-			UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+			UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 				.type = UI_DRAW_ELEMENT_TYPE_BOX,
 				.pos =	(Vector2) { rect.x, rect.y },
 				.size = (Vector2) { rect.width, rect.height },
@@ -1444,13 +1442,13 @@ bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count
 				.out_color = WHITE,
 			});
 
-			UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+			UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 					.type = UI_DRAW_ELEMENT_TYPE_TEXT,
-					.pos = v2_add(pos, this->btn_padding),
+					.pos = v2_add(pos, self->btn_padding),
 					.fill_color = color,
 					.out_color = color,
 					.spr = NULL,
-					.font = this->font,
+					.font = self->font,
 					.text = item,
 					.font_size = font_size,
 				});
@@ -1462,7 +1460,7 @@ bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count
 		}
 	} else {
 		const char *item = items[*selected];
-		Vector2 size = Vector2Add(MeasureTextEx(*this->font, item, font_size, 1.f), Vector2Scale(this->btn_padding, 2.f));
+		Vector2 size = Vector2Add(MeasureTextEx(*self->font, item, font_size, 1.f), Vector2Scale(self->btn_padding, 2.f));
 		Rectangle rect = {
 			.x = pos.x,
 			.y = pos.y,
@@ -1470,7 +1468,7 @@ bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count
 			.height = size.y,
 		};
 
-		Vector2 mpos = *this->mpos_ptr;
+		Vector2 mpos = *self->mpos_ptr;
 		bool hovering = CheckCollisionPointRec(mpos, rect);
 
 		if (hovering && mouse_button_pressed_unignored(MOUSE_BUTTON_LEFT)) {
@@ -1485,7 +1483,7 @@ bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count
 			color.a = 255;
 		}
 
-		UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+		UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 			.type = UI_DRAW_ELEMENT_TYPE_BOX,
 			.pos =	(Vector2) { rect.x, rect.y },
 			.size = (Vector2) { rect.width, rect.height },
@@ -1493,13 +1491,13 @@ bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count
 			.out_color = WHITE,
 		});
 
-		UI_Draw_element_stack_push(&this->draw_element_stack, (UI_Draw_element) {
+		UI_Draw_element_stack_push(&self->draw_element_stack, (UI_Draw_element) {
 				.type = UI_DRAW_ELEMENT_TYPE_TEXT,
-				.pos = v2_add(pos, this->btn_padding),
+				.pos = v2_add(pos, self->btn_padding),
 				.fill_color = color,
 				.out_color = color,
 				.spr = NULL,
-				.font = this->font,
+				.font = self->font,
 				.text = item,
 				.font_size = font_size,
 			});
@@ -1507,15 +1505,15 @@ bool UI_dropdown(UI* this, int *selected, const char **items, size_t items_count
 		max_size = size;
 	}
 
-	push_ui_widget(this, top, max_size);
+	push_ui_widget(self, top, max_size);
 
 	return click;
 }
 
-static void UI_titlebar(UI* this) {
-	Vector2 rect_pos = Vector2Subtract(this->pos, (Vector2) {this->theme.bg_padding.x, 0.f});
-	Vector2 rect_size = v2(this->bg_rect.width, 
-                        fmaxf(this->theme.titlebar_height, this->theme.titlebar_font_size + (2*this->theme.titlebar_padding)));
+static void UI_titlebar(UI* self) {
+	Vector2 rect_pos = Vector2Subtract(self->pos, (Vector2) {self->theme.bg_padding.x, 0.f});
+	Vector2 rect_size = v2(self->bg_rect.width, 
+                        fmaxf(self->theme.titlebar_height, self->theme.titlebar_font_size + (2*self->theme.titlebar_padding)));
 	Rectangle titlebar = {
 			.x = rect_pos.x,
 			.y = rect_pos.y,
@@ -1523,32 +1521,32 @@ static void UI_titlebar(UI* this) {
 			.height = rect_size.y,
 	};
 
-	DrawRectangleRec(titlebar, this->theme.titlebar_color);
+	DrawRectangleRec(titlebar, self->theme.titlebar_color);
 	/* DrawRectangleLinesEx(titlebar, 1.f, WHITE); */
 
-	Vector2 title_pos = v2(titlebar.x + this->theme.titlebar_padding, titlebar.y + this->theme.titlebar_padding);
-    /* Vector2 ui_size = get_ui_size(this); */
-	DrawTextEx(*this->font, TextFormat("%s", this->title), title_pos, this->theme.titlebar_font_size, 1.f, WHITE);
-	/* DrawTextEx(*this->font, TextFormat("%s %d, %d | %d, %d", this->title, (int)this->scroll_offset.x, (int)this->scroll_offset.y, (int)ui_size.x, (int)ui_size.y), title_pos, this->theme.titlebar_font_size, 1.f, WHITE); */
+	Vector2 title_pos = v2(titlebar.x + self->theme.titlebar_padding, titlebar.y + self->theme.titlebar_padding);
+    /* Vector2 ui_size = get_ui_size(self); */
+	DrawTextEx(*self->font, TextFormat("%s", self->title), title_pos, self->theme.titlebar_font_size, 1.f, WHITE);
+	/* DrawTextEx(*self->font, TextFormat("%s %d, %d | %d, %d", self->title, (int)self->scroll_offset.x, (int)self->scroll_offset.y, (int)ui_size.x, (int)ui_size.y), title_pos, self->theme.titlebar_font_size, 1.f, WHITE); */
 }
 
-void UI_background(UI* this) {
-	DrawRectangleRec(this->bg_rect, this->theme.bg_color);
-	/* DrawRectangleLinesEx(this->bg_rect, 1.f, WHITE); */
-    /* DrawRectangleLinesEx(this->ui_rect, 1.f, BLUE); */
+void UI_background(UI* self) {
+	DrawRectangleRec(self->bg_rect, self->theme.bg_color);
+	/* DrawRectangleLinesEx(self->bg_rect, 1.f, WHITE); */
+    /* DrawRectangleLinesEx(self->ui_rect, 1.f, BLUE); */
 }
 
-void UI_draw(UI* this) {
-    UI_titlebar(this); if (!this->show) {
+void UI_draw(UI* self) {
+    UI_titlebar(self); if (!self->show) {
         // @NOTE: Clean up draw element stack
-        this->draw_element_stack.count = 0;
+        self->draw_element_stack.count = 0;
         return;
     }
-	UI_background(this);
+	UI_background(self);
 
-    BeginScissorMode(this->bg_rect.x, this->bg_rect.y, this->bg_rect.width, this->bg_rect.height);
+    BeginScissorMode(self->bg_rect.x, self->bg_rect.y, self->bg_rect.width, self->bg_rect.height);
 	UI_Draw_element elm = {0};
-	while (UI_Draw_element_stack_pop(&this->draw_element_stack, &elm)) {
+	while (UI_Draw_element_stack_pop(&self->draw_element_stack, &elm)) {
 		switch (elm.type) {
             case UI_DRAW_ELEMENT_TYPE_RECT: {
                 DrawRectangleRec((Rectangle) {elm.pos.x, elm.pos.y, elm.size.x, elm.size.y}, elm.fill_color);
@@ -1584,7 +1582,7 @@ void UI_draw(UI* this) {
                 DrawTextEx(*elm.font, elm.text, elm.pos, elm.font_size, 1.f, elm.fill_color);
             } break;
             case UI_DRAW_ELEMENT_TYPE_LINE: {
-                Vector2 pos2 = v2(this->ui_rect.x + this->ui_rect.width, elm.pos.y);
+                Vector2 pos2 = v2(self->ui_rect.x + self->ui_rect.width, elm.pos.y);
                 DrawLineEx(elm.pos, pos2, elm.thick, elm.out_color);
             } break;
             case UI_DRAW_ELEMENT_TYPE_TEXTBOX: {
@@ -1597,27 +1595,27 @@ void UI_draw(UI* this) {
 	}
     EndScissorMode();
     // @TEMP
-    // DrawCircleV(this->pos, 16.f, RED);
+    // DrawCircleV(self->pos, 16.f, RED);
 }
 
-void UI_end(UI* this) {
+void UI_end(UI* self) {
     // Calculate bg_rect
-    /* Vector2 ui_size      = get_ui_size(this); */
-    Vector2 pos          = get_ui_bg_rect_pos(this);
-    this->bg_rect.x      = pos.x;
-    this->bg_rect.y      = pos.y;
-    this->bg_rect.width  = this->ui_rect.width + this->theme.bg_padding.x;
-    this->bg_rect.height  = this->ui_rect.height + this->theme.bg_padding.y;
+    /* Vector2 ui_size      = get_ui_size(self); */
+    Vector2 pos          = get_ui_bg_rect_pos(self);
+    self->bg_rect.x      = pos.x;
+    self->bg_rect.y      = pos.y;
+    self->bg_rect.width  = self->ui_rect.width + self->theme.bg_padding.x;
+    self->bg_rect.height  = self->ui_rect.height + self->theme.bg_padding.y;
 
-    this->ui_rect.x      = this->bg_rect.x + this->theme.bg_padding.x;
-    this->ui_rect.y      = this->bg_rect.y + this->theme.bg_padding.y;
-    this->ui_rect.width   -= this->theme.bg_padding.x;
-    this->ui_rect.height  -= this->theme.bg_padding.y;
-    /* this->ui_rect.width  = 300.f; */
-    /* this->ui_rect.height = 125.f; */
+    self->ui_rect.x      = self->bg_rect.x + self->theme.bg_padding.x;
+    self->ui_rect.y      = self->bg_rect.y + self->theme.bg_padding.y;
+    self->ui_rect.width   -= self->theme.bg_padding.x;
+    self->ui_rect.height  -= self->theme.bg_padding.y;
+    /* self->ui_rect.width  = 300.f; */
+    /* self->ui_rect.height = 125.f; */
 
-	Vector2 title_pos  = this->pos;
-	Vector2 title_size = (Vector2) {this->bg_rect.width, this->theme.titlebar_height};
+	Vector2 title_pos  = self->pos;
+	Vector2 title_size = (Vector2) {self->bg_rect.width, self->theme.titlebar_height};
 	Rectangle titlebar = {
 			.x = title_pos.x,
 			.y = title_pos.y,
@@ -1625,29 +1623,29 @@ void UI_end(UI* this) {
 			.height = title_size.y,
 	};
 	if (!mouse_button_down_unignored(MOUSE_BUTTON_LEFT)) {
-		this->is_moving = false;
+		self->is_moving = false;
 	}
 
-	Vector2 mpos = *this->mpos_ptr;
+	Vector2 mpos = *self->mpos_ptr;
 	if (mouse_button_pressed_unignored(MOUSE_BUTTON_LEFT) &&
 			CheckCollisionPointRec(mpos, titlebar)) {
-		/* this->pos_offset = Vector2Subtract(Vector2Subtract(mpos, title_pos), (Vector2) {this->theme.bg_padding.x, 0.f}); */
-		this->pos_offset = Vector2Subtract(mpos, title_pos);
-		this->is_moving = true;
+		/* self->pos_offset = Vector2Subtract(Vector2Subtract(mpos, title_pos), (Vector2) {self->theme.bg_padding.x, 0.f}); */
+		self->pos_offset = Vector2Subtract(mpos, title_pos);
+		self->is_moving = true;
 	}
 
-	if (this->is_moving) {
+	if (self->is_moving) {
         ignore_mouse_input(true);
-        this->pos = Vector2Subtract(mpos, this->pos_offset);
+        self->pos = Vector2Subtract(mpos, self->pos_offset);
 	} else {
         if (mouse_button_pressed_unignored(MOUSE_BUTTON_MIDDLE) &&
 			CheckCollisionPointRec(mpos, titlebar)) {
-            this->show = !this->show;
+            self->show = !self->show;
         }
     }
 
 	// eat mouse input if clicked on ui rect
-    Vector2 size = { this->bg_rect.width, this->bg_rect.height };
+    Vector2 size = { self->bg_rect.width, self->bg_rect.height };
 
      Rectangle rect = {
         pos.x,
@@ -1656,17 +1654,17 @@ void UI_end(UI* this) {
         size.y
      };
 
-     if ((this->show) && (mouse_button_down_unignored(MOUSE_BUTTON_LEFT) || mouse_button_down_unignored(MOUSE_BUTTON_MIDDLE) || mouse_button_down_unignored(MOUSE_BUTTON_RIGHT))&&
+     if ((self->show) && (mouse_button_down_unignored(MOUSE_BUTTON_LEFT) || mouse_button_down_unignored(MOUSE_BUTTON_MIDDLE) || mouse_button_down_unignored(MOUSE_BUTTON_RIGHT))&&
          (CheckCollisionPointRec(mpos, rect) || CheckCollisionPointRec(mpos, titlebar))) {
          ignore_mouse_input(true);
      }
 
-	this->last_used_id = 0;
-	UI_pop_layout(this);
+	self->last_used_id = 0;
+	UI_pop_layout(self);
 }
 
-void UI_free(UI* this) {
-	UI_Draw_element_stack_free(&this->draw_element_stack);
+void UI_free(UI* self) {
+	UI_Draw_element_stack_free(&self->draw_element_stack);
 }
 
 // Sprite

@@ -4,8 +4,7 @@
 #include <control_nob.h>
 #include <hole.h>
 #include <state.h>
-
-#include <packed/title_screen.png.h>
+#include <packed_include.h>
 
 #include <config.h>
 #define ENGINE_IMPLEMENTATION

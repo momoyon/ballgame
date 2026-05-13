@@ -2,6 +2,7 @@
 #include <asset_packer.h>
 #define COMMONLIB_REMOVE_PREFIX
 #define COMMONLIB_IMPLEMENTATION
+#include <commonlib.h>
 #define ENGINE_IMPLEMENTATION
 #include <engine.h>
 
@@ -14,7 +15,19 @@
 #define ASSET_FOLDER "resources/"
 #endif // ASSET_FOLDER
 
-bool pack_assets(const char *pack_folder_path, const char *assets_folder_path) {
+#ifdef _WIN32
+    #define PATH_SEP '\\'
+#else
+    #define PATH_SEP '/'
+#endif
+
+
+bool pack_assets(const char *pack_folder_path, const char *assets_folder_path, const char *include_file_path) {
+  FILE *include_file = fopen(include_file_path, "w");
+
+  fprintf(include_file, "#ifndef __PACKED_INCLUDE_HEADER_H__\n");
+  fprintf(include_file, "#define __PACKED_INCLUDE_HEADER_H__\n");
+
 	if (!DirectoryExists(pack_folder_path)) {
 		log_info("Creating pack folder: %s", pack_folder_path);
 		if (MakeDirectory(pack_folder_path) != 0) {
@@ -48,8 +61,13 @@ bool pack_assets(const char *pack_folder_path, const char *assets_folder_path) {
 			UnloadFileData(data);
 
 			log_info("		- Data size: %d bytes", data_size);
+
+      fprintf(include_file, "#include <%s.h>\n", basename);
 		}
 	}
+
+  fprintf(include_file, "#endif // __PACKED_INCLUDE_HEADER_H__\n");
+  fclose(include_file);
 
   return true;
 }
@@ -62,7 +80,7 @@ int main(void) {
     }
   }
 
-  pack_assets(PACK_FOLDER, ASSET_FOLDER);
+  pack_assets(PACK_FOLDER, ASSET_FOLDER, "include/packed_include.h");
 
   return 0;
 }

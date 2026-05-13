@@ -1,7 +1,7 @@
 #ifndef BALL_H_
 #define BALL_H_
 
-#include "raylib.h"
+#include "engine.h"
 
 typedef enum Ball_state {
   BALL_STATE_NORMAL,
@@ -17,6 +17,8 @@ typedef struct Ball {
   Color color;
   Ball_state state;
   bool sucked_to_goal;
+  Sprite spr;
+  Texture2D tex;
 } Ball;
 
 Ball make_ball(Vector2 pos, float radius, Color color);
