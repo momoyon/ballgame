@@ -3,12 +3,19 @@
 
 #include "raylib.h"
 
+typedef enum Ball_state {
+  BALL_STATE_NORMAL,
+  BALL_STATE_SUCK,
+} Ball_state;
+
 typedef struct Ball {
   Vector2 pos;
   Vector2 vel;
   Vector2 acc;
-  float radius;
+  float radius, og_radius;
   Color color;
+  Ball_state state;
+  bool completely_sucked;
 } Ball;
 
 Ball make_ball(Vector2 pos, float radius, Color color);

@@ -7,6 +7,7 @@
 typedef struct Hole {
   Vector2 pos;
   float radius;
+  bool goal;
 } Hole;
 
 typedef struct Holes {

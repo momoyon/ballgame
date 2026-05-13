@@ -9,6 +9,7 @@ Ball make_ball(Vector2 pos, float radius, Color color) {
     .vel = v2xx(0),
     .acc = v2xx(0),
     .radius = radius,
+    .og_radius = radius,
     .color = color,
   };
 
@@ -16,9 +17,22 @@ Ball make_ball(Vector2 pos, float radius, Color color) {
 }
 
 void update_ball(Ball *b, float dt) {
-  b->vel = v2_add(b->vel, b->acc);
-  b->pos = v2_add(b->pos, v2_scale(b->vel, dt));
-  b->acc = v2xx(0);
+  switch (b->state) {
+      case BALL_STATE_NORMAL: {
+          b->vel = v2_add(b->vel, b->acc);
+          b->pos = v2_add(b->pos, v2_scale(b->vel, dt));
+          b->acc = v2xx(0);
+      } break;
+      case BALL_STATE_SUCK: {
+          b->radius -= 100 * dt;
+
+          if (b->radius <= 0.f) {
+			  b->completely_sucked = true;
+          }
+      } break;
+      default:
+          ASSERT(false, "UNREACHABLE!");
+  }
 }
 
 void draw_ball(Ball *b) {

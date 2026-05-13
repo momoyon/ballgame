@@ -50,11 +50,17 @@ static void reset(void) {
   current_state = STATE_MENU;
 
   // generate holes
+  int goal_idx = rand() % holes_count;
+  holes.count = 0;
   for (int i = 0; i < holes_count; ++i) {
     Hole h = {
       .pos = v2(randomf(pad, g_width-pad), randomf(pad, g_height-pad)),
       .radius = control_radius*1.25f,
     };
+
+    if (i == goal_idx) {
+      h.goal = true;
+	}
 
     darr_append(holes, h);
   }
@@ -136,19 +142,18 @@ int main(void) {
     ClearBackground(BACKGROUND_COLOR);
 
     if (current_state != STATE_MENU) {
+      // draw holes
+      for (int i = 0; i < holes.count; ++i) {
+          Hole* h = &holes.items[i];
+
+          draw_hole(h);
+      }
       draw_control_nob(&left);
       draw_control_nob(&right);
       // draw line
       DrawLineV(v2(left.pos.x, left.pos.y - left.radius),
                 v2(right.pos.x, right.pos.y - right.radius), WHITE);
       draw_ball(&ball);
-
-      // draw holes
-      for (int i = 0; i < holes.count; ++i) {
-        Hole *h = &holes.items[i];
-
-        draw_hole(h);
-      }
     }
 
     switch (current_state) {
@@ -252,5 +257,15 @@ void play_update(float dt) {
   // Update holes
   for (int i = 0; i < holes.count; ++i) {
     Hole *h = &holes.items[i];
+
+    // collision with da ball
+	float dist2 = v2_mag2(v2_sub(ball.pos, h->pos));
+    if (dist2 < (ball.radius) * (ball.radius)) {
+      if (h->goal) {
+        current_state = STATE_GAMEOVER;
+      } else {
+        ball.state = BALL_STATE_SUCK;
+      }
+	}
   }
 }
