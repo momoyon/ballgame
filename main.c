@@ -3,8 +3,8 @@
 #include <asset_packer.h>
 #include <control_nob.h>
 #include <hole.h>
-#include <state.h>
 #include <packed_include.h>
+#include <state.h>
 
 #include <config.h>
 #define ENGINE_IMPLEMENTATION
@@ -86,17 +86,17 @@ int main(void) {
     // input
     switch (current_state) {
     case STATE_MENU: {
-      if (IsKeyPressed(KEY_DOWN)) {
+      if (IsKeyPressed(key_config.key_left_down) || IsKeyPressed(key_config.key_right_down)) {
         selected_menu_item = (selected_menu_item + 1) %
                              (sizeof(menuitems) / sizeof(menuitems[0]));
       }
-      if (IsKeyPressed(KEY_UP)) {
+      if (IsKeyPressed(key_config.key_left_up) || IsKeyPressed(key_config.key_right_up)) {
         selected_menu_item = (selected_menu_item - 1 +
                               (sizeof(menuitems) / sizeof(menuitems[0]))) %
                              (sizeof(menuitems) / sizeof(menuitems[0]));
       }
 
-      if (IsKeyPressed(KEY_ENTER)) {
+      if (IsKeyPressed(key_config.key_confirm)) {
         if (selected_menu_item == 0) {
           current_state = STATE_PLAYING;
         } else if (selected_menu_item == 1) {
@@ -108,11 +108,11 @@ int main(void) {
       }
     } break;
     case STATE_PLAYING: {
-      control_da_control_nob(&left, KEY_S, KEY_C);
-      control_da_control_nob(&right, KEY_K, KEY_N);
+      control_da_control_nob(&left, key_config.key_left_up, key_config.key_left_down);
+      control_da_control_nob(&right, key_config.key_right_up, key_config.key_right_down);
     } break;
     case STATE_GAMEOVER: {
-      if (IsKeyPressed(KEY_SPACE)) {
+      if (IsKeyPressed(key_config.key_confirm)) {
         reset();
         current_state = STATE_PLAYING;
       }
@@ -240,7 +240,7 @@ void play_update(float dt) {
       // Stop downward velocity (use *= -0.9 for bounce instead of 0 if
       // desired)
       if (ball.vel.y > 0)
-        ball.vel.y = 0;
+        ball.vel.y *= -0.5;
     }
 
     if (ball.pos.x < left.pos.x || ball.pos.x > right.pos.x) {
