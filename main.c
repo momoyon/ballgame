@@ -71,7 +71,7 @@ static void reset(void) {
 }
 
 int main(void) {
-  init_window(g_screen_width, g_screen_height, 1.0, "Ball Game", &g_width,
+  init_window(g_screen_width, g_screen_height, 0.5, "Ball Game", &g_width,
               &g_height);
   SetTargetFPS(60);
 

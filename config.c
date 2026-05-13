@@ -1,7 +1,7 @@
 #include <config.h>
 
-int g_screen_width  = 800;
-int g_screen_height = 600;
+int g_screen_width  = 1280;
+int g_screen_height = 960;
 
 int g_width  = 0;
 int g_height = 0;

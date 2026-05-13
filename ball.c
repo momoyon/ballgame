@@ -1,3 +1,4 @@
+#include "common.h"
 #include "config.h"
 #include "packed_include.h"
 #include "raylib.h"
@@ -17,7 +18,7 @@ Ball make_ball(Vector2 pos, float radius, Color color) {
 
   if (load_texture_from_data(&g_asset_manager, "ball.png", BALL_PNG_DATA,
                              BALL_PNG_DATA_SIZE, &res.tex)) {
-    ASSERT(init_sprite(&res.spr, res.tex, 1, 1),
+    ASSERT(init_sprite_scaled(&res.spr, res.tex, 1, 1),
            "ball sprite initializaiton fail");
     center_sprite_origin(&res.spr);
   }
