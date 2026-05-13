@@ -4,7 +4,9 @@
 #include <control_nob.h>
 #include <hole.h>
 #include <packed_include.h>
+#include <particle.h>
 #include <state.h>
+#include <common.h>
 
 #include <config.h>
 #define ENGINE_IMPLEMENTATION
@@ -28,6 +30,9 @@ Ball ball;
 State current_state = STATE_MENU;
 Holes holes = {0};
 int holes_count = 10; // Max holes to generate
+
+// TODO: Ball goes below line when going up.
+// TODO: Ball should maintain momentum when being moved up by line.
 
 // state machine
 const char *menuitems[] = {
@@ -86,11 +91,13 @@ int main(void) {
     // input
     switch (current_state) {
     case STATE_MENU: {
-      if (IsKeyPressed(key_config.key_left_down) || IsKeyPressed(key_config.key_right_down)) {
+      if (IsKeyPressed(key_config.key_left_down) ||
+          IsKeyPressed(key_config.key_right_down)) {
         selected_menu_item = (selected_menu_item + 1) %
                              (sizeof(menuitems) / sizeof(menuitems[0]));
       }
-      if (IsKeyPressed(key_config.key_left_up) || IsKeyPressed(key_config.key_right_up)) {
+      if (IsKeyPressed(key_config.key_left_up) ||
+          IsKeyPressed(key_config.key_right_up)) {
         selected_menu_item = (selected_menu_item - 1 +
                               (sizeof(menuitems) / sizeof(menuitems[0]))) %
                              (sizeof(menuitems) / sizeof(menuitems[0]));
@@ -108,8 +115,14 @@ int main(void) {
       }
     } break;
     case STATE_PLAYING: {
-      control_da_control_nob(&left, key_config.key_left_up, key_config.key_left_down);
-      control_da_control_nob(&right, key_config.key_right_up, key_config.key_right_down);
+      /// @DEBUG
+      if (IsKeyDown(KEY_P)) {
+        add_particles(GetMousePosition(), 100);
+      }
+      control_da_control_nob(&left, key_config.key_left_up,
+                             key_config.key_left_down);
+      control_da_control_nob(&right, key_config.key_right_up,
+                             key_config.key_right_down);
     } break;
     case STATE_GAMEOVER: {
       if (IsKeyPressed(key_config.key_confirm)) {
@@ -153,6 +166,13 @@ int main(void) {
       DrawLineV(v2(left.pos.x, left.pos.y - left.radius),
                 v2(right.pos.x, right.pos.y - right.radius), WHITE);
       draw_ball(&ball);
+
+      // draw particles
+      for (int i = g_particles.count - 1; i >= 0; --i) {
+        Particle *p = &g_particles.items[i];
+
+        draw_particle(p);
+      }
     }
 
     switch (current_state) {
@@ -273,6 +293,17 @@ void play_update(float dt) {
       if (h->goal) {
         ball.sucked_to_goal = true;
       }
+    }
+  }
+
+  // Update particles
+  for (int i = g_particles.count - 1; i >= 0; --i) {
+    Particle *p = &g_particles.items[i];
+
+    update_particle(p, dt);
+
+    if (p->time >= p->lifetime) {
+      darr_remove_unordered(g_particles, i);
     }
   }
 }

@@ -1,6 +1,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+#include <particle.h>
 #include <engine.h>
 
 typedef struct Key_config {
@@ -20,6 +21,7 @@ extern int g_height;
 
 extern float g_control_nob_speed;
 extern float g_gravity;
+extern Particles g_particles;
 
 extern Key_config key_config;
 

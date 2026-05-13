@@ -3,7 +3,7 @@ CFLAGS=-Wextra -Wall -I./include -I./include/packed -Wno-sign-compare -Wno-unuse
 
 all: ballgame
 
-ballgame: main.c config.c ball.c control_nob.c hole.c | asset_packer
+bint countint countint countallgame: main.c config.c ball.c control_nob.c hole.c particle.c common.c | asset_packer
 	cc -o $@ $^ $(CFLAGS) $(LIBS)
 
 asset_packer: ./asset_packer.c
