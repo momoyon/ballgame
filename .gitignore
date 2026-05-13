@@ -6,3 +6,4 @@ thirdparty
 /include/packed
 /include/packed.old
 /include/packed_include.h
+/compile_commands.json

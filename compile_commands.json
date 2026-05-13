@@ -1,0 +1,97 @@
+[
+  {
+    "file": "main.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-o",
+      "ballgame",
+      "main.c",
+      "-Wextra",
+      "-Wall",
+      "-I./include",
+      "-I./include/packed",
+      "-Wno-sign-compare",
+      "-Wno-unused-value",
+      "-Wno-unused-variable",
+      "-Wno-unused-but-set-variable"
+    ],
+    "directory": "/home/momoyon/Programming/c/ballgame",
+    "output": "ballgame"
+  },
+  {
+    "file": "config.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-o",
+      "ballgame",
+      "config.c",
+      "-Wextra",
+      "-Wall",
+      "-I./include",
+      "-I./include/packed",
+      "-Wno-sign-compare",
+      "-Wno-unused-value",
+      "-Wno-unused-variable",
+      "-Wno-unused-but-set-variable"
+    ],
+    "directory": "/home/momoyon/Programming/c/ballgame",
+    "output": "ballgame"
+  },
+  {
+    "file": "ball.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-o",
+      "ballgame",
+      "ball.c",
+      "-Wextra",
+      "-Wall",
+      "-I./include",
+      "-I./include/packed",
+      "-Wno-sign-compare",
+      "-Wno-unused-value",
+      "-Wno-unused-variable",
+      "-Wno-unused-but-set-variable"
+    ],
+    "directory": "/home/momoyon/Programming/c/ballgame",
+    "output": "ballgame"
+  },
+  {
+    "file": "control_nob.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-o",
+      "ballgame",
+      "control_nob.c",
+      "-Wextra",
+      "-Wall",
+      "-I./include",
+      "-I./include/packed",
+      "-Wno-sign-compare",
+      "-Wno-unused-value",
+      "-Wno-unused-variable",
+      "-Wno-unused-but-set-variable"
+    ],
+    "directory": "/home/momoyon/Programming/c/ballgame",
+    "output": "ballgame"
+  },
+  {
+    "file": "hole.c",
+    "arguments": [
+      "/usr/bin/cc",
+      "-o",
+      "ballgame",
+      "hole.c",
+      "-Wextra",
+      "-Wall",
+      "-I./include",
+      "-I./include/packed",
+      "-Wno-sign-compare",
+      "-Wno-unused-value",
+      "-Wno-unused-variable",
+      "-Wno-unused-but-set-variable"
+    ],
+    "directory": "/home/momoyon/Programming/c/ballgame",
+    "output": "ballgame"
+  }
+]

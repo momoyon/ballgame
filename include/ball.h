@@ -19,6 +19,7 @@ typedef struct Ball {
   bool sucked_to_goal;
   Sprite spr;
   Texture2D tex;
+  float rot_vel;
 } Ball;
 
 Ball make_ball(Vector2 pos, float radius, Color color);
