@@ -54,13 +54,13 @@ static void reset(void) {
   holes.count = 0;
   for (int i = 0; i < holes_count; ++i) {
     Hole h = {
-      .pos = v2(randomf(pad, g_width-pad), randomf(pad, g_height-pad)),
-      .radius = control_radius*1.25f,
+        .pos = v2(randomf(pad, g_width - pad), randomf(pad, g_height - pad)),
+        .radius = control_radius * 1.25f,
     };
 
     if (i == goal_idx) {
       h.goal = true;
-	}
+    }
 
     darr_append(holes, h);
   }
@@ -144,9 +144,9 @@ int main(void) {
     if (current_state != STATE_MENU) {
       // draw holes
       for (int i = 0; i < holes.count; ++i) {
-          Hole* h = &holes.items[i];
+        Hole *h = &holes.items[i];
 
-          draw_hole(h);
+        draw_hole(h);
       }
       draw_control_nob(&left);
       draw_control_nob(&right);
@@ -201,6 +201,15 @@ void play_update(float dt) {
   // apply gravity to ball
   ball.acc.y = g_gravity;
   update_ball(&ball, dt);
+
+  if (ball.state == BALL_STATE_SUCKED) {
+    if (ball.sucked_to_goal) {
+      current_state = STATE_GAMEOVER;
+    } else {
+      reset();
+    }
+  }
+
   for (int i = 0; i < substeps; ++i) {
     float subdt = dt / substeps;
     update_control_nob(&left, subdt);
@@ -259,13 +268,12 @@ void play_update(float dt) {
     Hole *h = &holes.items[i];
 
     // collision with da ball
-	float dist2 = v2_mag2(v2_sub(ball.pos, h->pos));
+    float dist2 = v2_mag2(v2_sub(ball.pos, h->pos));
     if (dist2 < (ball.radius) * (ball.radius)) {
+      ball.state = BALL_STATE_SUCKING;
       if (h->goal) {
-        current_state = STATE_GAMEOVER;
-      } else {
-        ball.state = BALL_STATE_SUCK;
+        ball.sucked_to_goal = true;
       }
-	}
+    }
   }
 }

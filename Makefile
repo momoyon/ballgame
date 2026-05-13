@@ -1,5 +1,5 @@
 LIBS=-lm -lraylib -L./
-CFLAGS=-Wextra -Wall -I./include -Wno-sign-compare -Wno-unused-value -Wno-unused-variable
+CFLAGS=-Wextra -Wall -I./include -Wno-sign-compare -Wno-unused-value -Wno-unused-variable -Wno-unused-but-set-variable
 
 all: ballgame asset_packer
 

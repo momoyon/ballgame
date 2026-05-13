@@ -5,7 +5,8 @@
 
 typedef enum Ball_state {
   BALL_STATE_NORMAL,
-  BALL_STATE_SUCK,
+  BALL_STATE_SUCKING,
+  BALL_STATE_SUCKED,
 } Ball_state;
 
 typedef struct Ball {
@@ -15,7 +16,7 @@ typedef struct Ball {
   float radius, og_radius;
   Color color;
   Ball_state state;
-  bool completely_sucked;
+  bool sucked_to_goal;
 } Ball;
 
 Ball make_ball(Vector2 pos, float radius, Color color);
